@@ -7,6 +7,7 @@ import {
   Integration,
   IntegrationClass,
   Options,
+  SessionMode,
   SessionStatus,
   Severity,
 } from '@sentry/types';
@@ -99,6 +100,11 @@ export abstract class BaseClient<B extends Backend, O extends Options> implement
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   public captureException(exception: any, hint?: EventHint, scope?: Scope): string | undefined {
     let eventId: string | undefined = hint && hint.event_id;
+
+    if (scope) {
+      const aggregatedSessionStatus = scope.getAggregatedSessionStatus();
+      aggregatedSessionStatus.sessionStatus = 'errored';
+    }
 
     this._process(
       this._getBackend()
@@ -254,7 +260,9 @@ export abstract class BaseClient<B extends Backend, O extends Options> implement
       userAgent,
       errors: session.errors + Number(errored || crashed),
     });
-    this.captureSession(session);
+    if (session.sessionMode === SessionMode.Application) {
+      this.captureSession(session);
+    }
   }
 
   /** Deliver captured session to Sentry */
