@@ -66,7 +66,7 @@ export class Scope implements ScopeInterface {
   protected _session?: Session;
 
   /** Request Mode Session Status */
-  protected _aggregatedSessionStatus?: { sessionStatus: string } = { sessionStatus: 'ok' };
+  protected _requestSession: { status: string } = { status: 'ok' };
 
   /**
    * Inherit values from the parent scope.
@@ -86,8 +86,8 @@ export class Scope implements ScopeInterface {
       newScope._transactionName = scope._transactionName;
       newScope._fingerprint = scope._fingerprint;
       newScope._eventProcessors = [...scope._eventProcessors];
-      if (scope._aggregatedSessionStatus) {
-        newScope._aggregatedSessionStatus = scope._aggregatedSessionStatus;
+      if (scope._requestSession) {
+        newScope._requestSession = scope._requestSession;
       }
     }
     return newScope;
@@ -280,8 +280,8 @@ export class Scope implements ScopeInterface {
   /**
    * @inheritDoc
    */
-  public setAggregatedSessionStatus(status: string): this {
-    this._aggregatedSessionStatus = { sessionStatus: status };
+  public setRequestSession(status: string): this {
+    this._requestSession.status = status;
     this._notifyScopeListeners();
     return this;
   }
@@ -289,8 +289,8 @@ export class Scope implements ScopeInterface {
   /**
    * @inheritDoc
    */
-  public getAggregatedSessionStatus(): { sessionStatus: string } | undefined {
-    return this._aggregatedSessionStatus;
+  public getRequestSession(): { status: string } {
+    return this._requestSession;
   }
 
   /**
