@@ -2,7 +2,6 @@ import {
   AggregatedSessions,
   AggregationCounts,
   Session as SessionInterface,
-  SessionAttributes,
   SessionContext,
   SessionFlusher as SessionFlusherInterface,
   SessionMode,
@@ -10,6 +9,8 @@ import {
   Transport,
 } from '@sentry/types';
 import { dropUndefinedKeys, logger, uuid4 } from '@sentry/utils';
+
+import { getCurrentHub } from './hub';
 
 /**
  * @inheritdoc
@@ -103,26 +104,6 @@ export class Session implements SessionInterface {
   }
 
   /** JSDoc */
-  getSessionAttributes(withUserInfo: boolean = true): SessionAttributes {
-    const attrs: SessionAttributes = {};
-    if (this.release !== undefined) {
-      attrs.release = this.release;
-    }
-    if (this.environment !== undefined) {
-      attrs.environment = this.environment;
-    }
-    if (withUserInfo) {
-      if (this.ipAddress !== undefined) {
-        attrs.ipAddress = this.ipAddress;
-      }
-      if (this.userAgent !== undefined) {
-        attrs.userAgent = this.userAgent;
-      }
-    }
-    return attrs;
-  }
-
-  /** JSDoc */
   toJSON(): {
     init: boolean;
     sid: string;
@@ -165,7 +146,12 @@ export class Session implements SessionInterface {
  */
 export class SessionFlusher implements SessionFlusherInterface {
   private _pendingAggregates: { [key: number]: AggregationCounts } = {};
-  private _sessionAttrs: SessionAttributes | undefined;
+  private _sessionAttrs:
+    | {
+        environment?: string;
+        release?: string;
+      }
+    | undefined;
   private _intervalId: any;
 
   constructor(private _transport: Transport, public readonly flushTimeout: number = 10) {
@@ -207,32 +193,35 @@ export class SessionFlusher implements SessionFlusherInterface {
   }
 
   /** JSDoc */
-  addSession(session: Session): void {
+  public incrementSessionCount(): void {
     // If Session attrs don't already exist in the pendingAggregates buffer, then set them from the Session passed
     if (!this._sessionAttrs) {
-      this._sessionAttrs = session.getSessionAttributes(false);
+      const client = getCurrentHub().getClient();
+      const { release, environment } = (client && client.getOptions()) || {};
+      this._sessionAttrs = { release: release, environment: environment };
     }
 
     // Truncate minutes and seconds on Session Started attribute to have one minute bucket keys
-    const sessionStartedTrunc: number = new Date(session.started).setMinutes(0, 0, 0);
-
+    const sessionStartedTrunc: number = new Date().setMinutes(0, 0, 0);
     this._pendingAggregates[sessionStartedTrunc] = this._pendingAggregates[sessionStartedTrunc] || {};
 
     // corresponds to aggregated sessions in one specific minute bucket
     // for example, {"started":"2021-03-16T08:00:00.000Z","exited":4, "errored": 1}
     const aggregationCounts: AggregationCounts = this._pendingAggregates[sessionStartedTrunc];
-
     if (!aggregationCounts.started) {
       aggregationCounts.started = new Date(sessionStartedTrunc).toISOString();
     }
-    if (session.status == SessionStatus.Crashed) {
-      aggregationCounts.crashed = aggregationCounts.crashed !== undefined ? aggregationCounts.crashed + 1 : 1;
-    } else if (session.status == SessionStatus.Abnormal) {
-      aggregationCounts.abnormal = aggregationCounts.abnormal !== undefined ? aggregationCounts.abnormal + 1 : 1;
-    } else if (session.errors > 0) {
-      aggregationCounts.errored = aggregationCounts.errored !== undefined ? aggregationCounts.errored + 1 : 1;
-    } else {
-      aggregationCounts.exited = aggregationCounts.exited !== undefined ? aggregationCounts.exited + 1 : 1;
+
+    const requestSession = getCurrentHub()
+      .getScope()
+      ?.getRequestSession();
+
+    if (requestSession) {
+      if (requestSession.status === 'errored') {
+        aggregationCounts.errored = aggregationCounts.errored !== undefined ? aggregationCounts.errored + 1 : 1;
+      } else {
+        aggregationCounts.exited = aggregationCounts.exited !== undefined ? aggregationCounts.exited + 1 : 1;
+      }
     }
   }
 }
