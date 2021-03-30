@@ -22,12 +22,12 @@ export { CaptureContext, Scope, ScopeContext } from './scope';
 export { SdkInfo } from './sdkinfo';
 export { SdkMetadata } from './sdkmetadata';
 export {
+  AggregatedSessions,
+  AggregationCounts,
   Session,
   SessionContext,
   SessionStatus,
   SessionMode,
-  AggregatedSessions,
-  AggregationCounts,
   SessionFlusher,
 } from './session';
 export { Severity } from './severity';
