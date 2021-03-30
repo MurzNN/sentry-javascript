@@ -4,8 +4,6 @@ import { User } from './user';
  * @inheritdoc
  */
 export interface Session extends SessionContext {
-  getSessionAttributes(withUserInfo: boolean): SessionAttributes;
-
   /** JSDoc */
   update(context?: SessionContext): void;
 
@@ -77,16 +75,11 @@ export enum SessionMode {
 }
 
 /** JSDoc */
-export interface SessionAttributes {
-  environment?: string;
-  ipAddress?: string;
-  release?: string;
-  userAgent?: string;
-}
-
-/** JSDoc */
 export interface AggregatedSessions {
-  attrs?: SessionAttributes;
+  attrs?: {
+    environment?: string;
+    release?: string;
+  };
   aggregates?: Array<AggregationCounts>;
 }
 
@@ -94,7 +87,7 @@ export interface SessionFlusher {
   readonly flushTimeout: number;
 
   /** Aggregates the Session in its corresponding Aggregate Bucket */
-  addSession(session: Session): void;
+  incrementSessionCount(): void;
 
   /** Submits the session to Sentry */
   sendSessions(aggregatedSession: AggregatedSessions): void;
