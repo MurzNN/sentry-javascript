@@ -101,9 +101,9 @@ export abstract class BaseClient<B extends Backend, O extends Options> implement
   public captureException(exception: any, hint?: EventHint, scope?: Scope): string | undefined {
     let eventId: string | undefined = hint && hint.event_id;
 
-    if (scope) {
-      const aggregatedSessionStatus = scope.getAggregatedSessionStatus();
-      aggregatedSessionStatus.sessionStatus = 'errored';
+    if (scope && this.getOptions().autoSessionTracking) {
+      const requestSession = scope.getRequestSession();
+      requestSession.status = 'errored';
     }
 
     this._process(
