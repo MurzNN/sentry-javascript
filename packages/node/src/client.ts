@@ -1,6 +1,6 @@
 import { BaseClient, Scope } from '@sentry/core';
 import { Session, SessionFlusher } from '@sentry/hub';
-import { Event, EventHint, SessionMode } from '@sentry/types';
+import { Event, EventHint } from '@sentry/types';
 import { logger } from '@sentry/utils';
 
 import { NodeBackend, NodeOptions } from './backend';
@@ -32,17 +32,21 @@ export class NodeClient extends BaseClient<NodeBackend, NodeOptions> {
     if (!session.release) {
       logger.warn('Discarded session because of missing release');
     } else {
-      if (session.sessionMode === SessionMode.Application) {
-        this._sendSession(session);
-        // After sending, we set init false to inidcate it's not the first occurence
-        session.update({ init: false });
-      } else {
-        if (!this._sessionFlusher) {
-          logger.warn('Discarded request mode session because autosessionTracking option was disabled');
-        } else {
-          this._sessionFlusher.addSession(session);
-        }
-      }
+      this._sendSession(session);
+      // After sending, we set init false to inidcate it's not the first occurence
+      session.update({ init: false });
+    }
+  }
+
+  /**
+   *
+   * @inheritDoc
+   */
+  public captureRequestSession(): void {
+    if (!this._sessionFlusher) {
+      logger.warn('Discarded request mode session because autoSessionTracking option was disabled');
+    } else {
+      this._sessionFlusher.incrementSessionCount();
     }
   }
 
