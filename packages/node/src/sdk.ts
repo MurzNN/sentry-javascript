@@ -1,6 +1,5 @@
 import { getCurrentHub, initAndBind, Integrations as CoreIntegrations, SDK_VERSION } from '@sentry/core';
 import { getMainCarrier, setHubOnCarrier } from '@sentry/hub';
-import { SessionContext } from '@sentry/types';
 import { getGlobalObject } from '@sentry/utils';
 import * as domain from 'domain';
 
@@ -171,34 +170,11 @@ export async function close(timeout?: number): Promise<boolean> {
 }
 
 /**
- *
- */
-export function withAutosessionTracking<T extends any[]>(
-  callback: (...args: T) => void,
-  context?: SessionContext,
-): (...args: T) => void {
-  return (...args) => {
-    const hub = getCurrentHub();
-    // Check that start session is on hub
-    if (isAutosessionTrackingEnabled()) {
-      try {
-        hub.startSession(context);
-        callback(...args);
-      } finally {
-        hub.endSession();
-      }
-    } else {
-      callback(...args);
-    }
-  };
-}
-
-/**
- *
+ *  Function that checks if autoSessionTracking option is enabled
  */
 export function isAutosessionTrackingEnabled(): boolean {
   // Also add the checks that makes sure in case when you stop session tracking or resume
-  const client = getCurrentHub().getClient();
+  const client = getCurrentHub().getClient<NodeClient>();
   const clientOptions: NodeOptions | null = client ? client.getOptions() : null;
   if (clientOptions && clientOptions.autoSessionTracking !== undefined) {
     return clientOptions.autoSessionTracking;
