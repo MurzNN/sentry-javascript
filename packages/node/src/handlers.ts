@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { captureException, getCurrentHub, startTransaction, withScope } from '@sentry/core';
 import { extractTraceparentData, Span } from '@sentry/tracing';
-import { Event, ExtractedNodeRequestData, SessionMode, Transaction } from '@sentry/types';
+import { Event, ExtractedNodeRequestData, Transaction } from '@sentry/types';
 import { forget, isPlainObject, isString, logger, normalize, stripUrlQueryAndFragment } from '@sentry/utils';
 import * as cookie from 'cookie';
 import * as domain from 'domain';
@@ -11,7 +11,7 @@ import * as os from 'os';
 import * as url from 'url';
 
 import { NodeClient } from './client';
-import { flush, withAutosessionTracking } from './sdk';
+import { flush } from './sdk';
 
 const DEFAULT_SHUTDOWN_TIMEOUT = 2000;
 
@@ -375,38 +375,57 @@ export type RequestHandlerOptions = ParseRequestOptions & {
 export function requestHandler(
   options?: RequestHandlerOptions,
 ): (req: http.IncomingMessage, res: http.ServerResponse, next: (error?: any) => void) => void {
-  return withAutosessionTracking(
-    function sentryRequestMiddleware(
-      req: http.IncomingMessage,
-      res: http.ServerResponse,
-      next: (error?: any) => void,
-    ): void {
-      if (options && options.flushTimeout && options.flushTimeout > 0) {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        const _end = res.end;
-        res.end = function(chunk?: any | (() => void), encoding?: string | (() => void), cb?: () => void): void {
-          flush(options.flushTimeout)
-            .then(() => {
-              _end.call(this, chunk, encoding, cb);
-            })
-            .then(null, e => {
-              logger.error(e);
-            });
-        };
+  return function sentryRequestMiddleware(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    next: (error?: any) => void,
+  ): void {
+    if (options && options.flushTimeout && options.flushTimeout > 0) {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const _end = res.end;
+      res.end = function(chunk?: any | (() => void), encoding?: string | (() => void), cb?: () => void): void {
+        flush(options.flushTimeout)
+          .then(() => {
+            _end.call(this, chunk, encoding, cb);
+          })
+          .then(null, e => {
+            logger.error(e);
+          });
+      };
+    }
+    const local = domain.create();
+    local.add(req);
+    local.add(res);
+    local.on('error', err => {
+      logger.log('Errored!!!');
+      const scope = getCurrentHub().getStackTop().scope;
+      if (
+        scope &&
+        getCurrentHub()
+          .getClient()
+          ?.getOptions().autoSessionTracking
+      ) {
+        const requestSession = scope.getRequestSession();
+        requestSession.status = 'errored';
       }
-      const local = domain.create();
-      local.add(req);
-      local.add(res);
-      local.on('error', next);
-      local.run(() => {
-        getCurrentHub().configureScope(scope =>
-          scope.addEventProcessor((event: Event) => parseRequest(event, req, options)),
-        );
-        next();
+      next(err);
+    });
+
+    local.run(() => {
+      const currentHub = getCurrentHub();
+      currentHub.configureScope(scope => scope.addEventProcessor((event: Event) => parseRequest(event, req, options)));
+      res.once('finish', () => {
+        if (currentHub && currentHub.getClient()) {
+          const client = currentHub.getClient();
+
+          if (client && client.captureRequestSession && client.getOptions().autoSessionTracking) {
+            client.captureRequestSession();
+          }
+        }
       });
-    },
-    { sessionMode: SessionMode.Request },
-  );
+      next();
+    });
+  };
 }
 
 /** JSDoc */
@@ -465,6 +484,7 @@ export function errorHandler(options?: {
           _scope.setSpan(transaction);
         }
         const eventId = captureException(error);
+        logger.log('Errored!');
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (res as any).sentry = eventId;
         next(error);
