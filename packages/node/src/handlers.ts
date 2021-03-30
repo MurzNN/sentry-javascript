@@ -11,7 +11,7 @@ import * as os from 'os';
 import * as url from 'url';
 
 import { NodeClient } from './client';
-import { flush } from './sdk';
+import { flush, isAutosessionTrackingEnabled } from './sdk';
 
 const DEFAULT_SHUTDOWN_TIMEOUT = 2000;
 
@@ -397,14 +397,8 @@ export function requestHandler(
     local.add(req);
     local.add(res);
     local.on('error', err => {
-      logger.log('Errored!!!');
       const scope = getCurrentHub().getStackTop().scope;
-      if (
-        scope &&
-        getCurrentHub()
-          .getClient()
-          ?.getOptions().autoSessionTracking
-      ) {
+      if (scope && isAutosessionTrackingEnabled()) {
         const requestSession = scope.getRequestSession();
         requestSession.status = 'errored';
       }
@@ -418,7 +412,7 @@ export function requestHandler(
         if (currentHub && currentHub.getClient()) {
           const client = currentHub.getClient();
 
-          if (client && client.captureRequestSession && client.getOptions().autoSessionTracking) {
+          if (client && client.captureRequestSession && isAutosessionTrackingEnabled()) {
             client.captureRequestSession();
           }
         }
@@ -484,7 +478,6 @@ export function errorHandler(options?: {
           _scope.setSpan(transaction);
         }
         const eventId = captureException(error);
-        logger.log('Errored!');
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (res as any).sentry = eventId;
         next(error);
