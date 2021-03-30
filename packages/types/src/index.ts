@@ -26,7 +26,6 @@ export {
   SessionContext,
   SessionStatus,
   SessionMode,
-  SessionAttributes,
   AggregatedSessions,
   AggregationCounts,
   SessionFlusher,
