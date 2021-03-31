@@ -397,10 +397,12 @@ export function requestHandler(
     local.add(req);
     local.add(res);
     local.on('error', err => {
-      const scope = getCurrentHub().getStackTop().scope;
-      if (scope && isAutosessionTrackingEnabled()) {
-        const requestSession = scope.getRequestSession();
-        requestSession.status = 'errored';
+      if (isAutosessionTrackingEnabled()) {
+        const scope = getCurrentHub().getStackTop().scope;
+        if (scope) {
+          const requestSession = scope.getRequestSession();
+          requestSession.status = 'errored';
+        }
       }
       next(err);
     });
@@ -412,8 +414,10 @@ export function requestHandler(
         if (currentHub && currentHub.getClient()) {
           const client = currentHub.getClient();
 
-          if (client && client.captureRequestSession && isAutosessionTrackingEnabled()) {
-            client.captureRequestSession();
+          if (isAutosessionTrackingEnabled()) {
+            if (client && client.captureRequestSession) {
+              client.captureRequestSession();
+            }
           }
         }
       });
