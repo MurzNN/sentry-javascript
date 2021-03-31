@@ -86,6 +86,9 @@ export interface AggregatedSessions {
 export interface SessionFlusher {
   readonly flushTimeout: number;
 
+  /** Getter function that returns a boolean flag that indicater whether an instance of Session Flusher is enabled */
+  getEnabled(): void;
+
   /** Aggregates the Session in its corresponding Aggregate Bucket */
   incrementSessionCount(): void;
 
