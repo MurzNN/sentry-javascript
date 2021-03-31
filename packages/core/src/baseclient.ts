@@ -7,7 +7,6 @@ import {
   Integration,
   IntegrationClass,
   Options,
-  SessionMode,
   SessionStatus,
   Severity,
 } from '@sentry/types';
@@ -101,9 +100,13 @@ export abstract class BaseClient<B extends Backend, O extends Options> implement
   public captureException(exception: any, hint?: EventHint, scope?: Scope): string | undefined {
     let eventId: string | undefined = hint && hint.event_id;
 
-    if (scope && this.getOptions().autoSessionTracking) {
+    if (this._options.autoSessionTracking && scope) {
       const requestSession = scope.getRequestSession();
-      requestSession.status = 'errored';
+      // This check is required because global error handlers set a status and we do not want to override that status
+      // set by global handlers
+      if (requestSession.status === 'undefined') {
+        requestSession.status = 'errored';
+      }
     }
 
     this._process(
@@ -145,11 +148,15 @@ export abstract class BaseClient<B extends Backend, O extends Options> implement
   public captureEvent(event: Event, hint?: EventHint, scope?: Scope): string | undefined {
     let eventId: string | undefined = hint && hint.event_id;
 
-    const isTransaction = event.type === 'transaction';
+    if (this._options.autoSessionTracking) {
+      const isTransaction = event.type === 'transaction';
 
-    if (scope && this.getOptions().autoSessionTracking && !isTransaction) {
-      const requestSession = scope.getRequestSession();
-      requestSession.status = 'errored';
+      if (!isTransaction && scope) {
+        const requestSession = scope.getRequestSession();
+        if (requestSession.status === 'undefined') {
+          requestSession.status = 'errored';
+        }
+      }
     }
 
     this._process(
@@ -267,9 +274,7 @@ export abstract class BaseClient<B extends Backend, O extends Options> implement
       userAgent,
       errors: session.errors + Number(errored || crashed),
     });
-    if (session.sessionMode === SessionMode.Application) {
-      this.captureSession(session);
-    }
+    this.captureSession(session);
   }
 
   /** Deliver captured session to Sentry */
