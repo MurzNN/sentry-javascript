@@ -66,7 +66,7 @@ export class Scope implements ScopeInterface {
   protected _session?: Session;
 
   /** Request Mode Session Status */
-  protected _requestSession: { status: string } = { status: 'ok' };
+  protected _requestSession: { status?: string } = {};
 
   /**
    * Inherit values from the parent scope.
@@ -289,7 +289,7 @@ export class Scope implements ScopeInterface {
   /**
    * @inheritDoc
    */
-  public getRequestSession(): { status: string } {
+  public getRequestSession(): { status?: string } {
     return this._requestSession;
   }
 

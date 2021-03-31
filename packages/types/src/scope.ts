@@ -130,7 +130,7 @@ export interface Scope {
   /**
    * Returns an instance of `request` mode `Session`
    */
-  getRequestSession(): { status: string };
+  getRequestSession(): { status?: string };
 
   /**
    * Updates the scope with provided data. Can work in three variations:
