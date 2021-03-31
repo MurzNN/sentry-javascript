@@ -44,8 +44,19 @@ export class NodeClient extends BaseClient<NodeBackend, NodeOptions> {
     if (!this._sessionFlusher) {
       logger.warn('Discarded request mode session because autoSessionTracking option was disabled');
     } else {
-      this._sessionFlusher.incrementSessionCount();
+      if (this._sessionFlusher.getEnabled()) {
+        this._sessionFlusher.incrementSessionCount();
+      }
     }
+  }
+
+  /**
+   *
+   * @inheritdoc
+   */
+  public close(timeout?: number): PromiseLike<boolean> {
+    this._sessionFlusher?.close();
+    return super.close(timeout);
   }
 
   /**
