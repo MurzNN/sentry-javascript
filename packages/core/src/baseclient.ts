@@ -145,6 +145,13 @@ export abstract class BaseClient<B extends Backend, O extends Options> implement
   public captureEvent(event: Event, hint?: EventHint, scope?: Scope): string | undefined {
     let eventId: string | undefined = hint && hint.event_id;
 
+    const isTransaction = event.type === 'transaction';
+
+    if (scope && this.getOptions().autoSessionTracking && !isTransaction) {
+      const requestSession = scope.getRequestSession();
+      requestSession.status = 'errored';
+    }
+
     this._process(
       this._captureEvent(event, hint, scope).then(result => {
         eventId = result;
