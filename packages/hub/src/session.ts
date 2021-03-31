@@ -154,8 +154,17 @@ export class SessionFlusher implements SessionFlusherInterface {
     | undefined;
   private _intervalId: any;
 
-  constructor(private _transport: Transport, public readonly flushTimeout: number = 10) {
+  constructor(
+    private _transport: Transport,
+    public readonly flushTimeout: number = 10,
+    private _isEnabled: boolean = true,
+  ) {
     this._intervalId = setInterval(this.flush.bind(this), this.flushTimeout * 1000);
+  }
+
+  /** JSDoc */
+  public getEnabled(): boolean {
+    return this._isEnabled;
   }
 
   /** JSDoc */
@@ -189,6 +198,7 @@ export class SessionFlusher implements SessionFlusherInterface {
   /** JSDoc */
   close(): void {
     clearTimeout(this._intervalId);
+    this._isEnabled = false;
     this.flush();
   }
 
@@ -219,6 +229,8 @@ export class SessionFlusher implements SessionFlusherInterface {
     if (requestSession) {
       if (requestSession.status === 'errored') {
         aggregationCounts.errored = aggregationCounts.errored !== undefined ? aggregationCounts.errored + 1 : 1;
+      } else if (requestSession.status === 'crashed') {
+        aggregationCounts.crashed = aggregationCounts.crashed !== undefined ? aggregationCounts.crashed + 1 : 1;
       } else {
         aggregationCounts.exited = aggregationCounts.exited !== undefined ? aggregationCounts.exited + 1 : 1;
       }
