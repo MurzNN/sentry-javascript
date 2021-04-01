@@ -2,7 +2,9 @@ import { getCurrentHub, Scope } from '@sentry/core';
 import { Integration } from '@sentry/types';
 import { consoleSandbox } from '@sentry/utils';
 
+import { NodeClient } from '../client';
 import { logAndExitProcess } from '../handlers';
+import { isAutosessionTrackingEnabled } from '../sdk';
 
 type UnhandledRejectionMode = 'none' | 'warn' | 'strict';
 
@@ -67,6 +69,15 @@ export class OnUnhandledRejection implements Integration {
       }
       if (context.extra) {
         scope.setExtras(context.extra);
+      }
+
+      if (isAutosessionTrackingEnabled()) {
+        const client = getCurrentHub().getClient<NodeClient>();
+        const _requestSession = scope.getRequestSession();
+        _requestSession.status = 'crashed';
+        if (client) {
+          client.captureRequestSession();
+        }
       }
 
       hub.captureException(reason, { originalException: promise });
