@@ -401,7 +401,9 @@ export function requestHandler(
         const scope = getCurrentHub().getStackTop().scope;
         if (scope) {
           const requestSession = scope.getRequestSession();
-          requestSession.status = 'errored';
+          if (requestSession.status === undefined) {
+            requestSession.status = 'errored';
+          }
         }
       }
       next(err);
@@ -410,16 +412,17 @@ export function requestHandler(
     local.run(() => {
       const currentHub = getCurrentHub();
       currentHub.configureScope(scope => scope.addEventProcessor((event: Event) => parseRequest(event, req, options)));
-      res.once('finish', () => {
-        if (currentHub && currentHub.getClient()) {
-          const client = currentHub.getClient();
 
+      res.once('finish', () => {
+        setImmediate(() => {
           if (isAutosessionTrackingEnabled()) {
+            const client = currentHub.getClient();
+
             if (client && client.captureRequestSession) {
               client.captureRequestSession();
             }
           }
-        }
+        });
       });
       next();
     });
