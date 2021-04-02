@@ -79,16 +79,13 @@ export class OnUncaughtException implements Integration {
         if (hub.getIntegration(OnUncaughtException)) {
           hub.withScope((scope: Scope) => {
             scope.setLevel(Severity.Fatal);
-
-            if (isAutosessionTrackingEnabled()) {
-              const _requestSession = scope.getRequestSession();
-              _requestSession.status = 'crashed';
-              if (client) {
-                client.captureRequestSession();
-              }
-            }
+            scope.setExtra('onUncaughtException', true);
 
             hub.captureException(error, { originalException: error });
+
+            if (isAutosessionTrackingEnabled() && client) {
+              client.captureRequestSession();
+            }
 
             if (!calledFatalError) {
               calledFatalError = true;
