@@ -71,16 +71,14 @@ export class OnUnhandledRejection implements Integration {
         scope.setExtras(context.extra);
       }
 
+      hub.captureException(reason, { originalException: promise });
+
       if (isAutosessionTrackingEnabled()) {
         const client = getCurrentHub().getClient<NodeClient>();
-        const _requestSession = scope.getRequestSession();
-        _requestSession.status = 'crashed';
         if (client) {
           client.captureRequestSession();
         }
       }
-
-      hub.captureException(reason, { originalException: promise });
     });
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
