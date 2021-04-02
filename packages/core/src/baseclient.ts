@@ -102,9 +102,10 @@ export abstract class BaseClient<B extends Backend, O extends Options> implement
 
     if (this._options.autoSessionTracking && scope) {
       const requestSession = scope.getRequestSession();
-      // This check is required because global error handlers set a status and we do not want to override that status
-      // set by global handlers
-      if (requestSession.status === 'undefined') {
+      const scopeExtras = scope.getExtras();
+      if (scopeExtras.unhandledPromiseRejection || scopeExtras.onUncaughtException) {
+        requestSession.status = 'crashed';
+      } else {
         requestSession.status = 'errored';
       }
     }
