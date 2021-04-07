@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/hub",
+  "name": "@sentry-murz/hub",
   "version": "6.2.5",
   "description": "Sentry hub which handles global state managment.",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

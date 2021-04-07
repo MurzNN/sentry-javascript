@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/wasm",
+  "name": "@sentry-murz/wasm",
   "version": "6.2.5",
   "description": "Support for WASM.",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

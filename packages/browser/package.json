@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/browser",
+  "name": "@sentry-murz/browser",
   "version": "6.2.5",
   "description": "Official Sentry SDK for browsers",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

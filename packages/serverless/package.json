@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/serverless",
+  "name": "@sentry-murz/serverless",
   "version": "6.2.5",
   "description": "Offical Sentry SDK for various serverless solutions",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

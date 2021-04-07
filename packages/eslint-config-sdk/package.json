@@ -1,5 +1,5 @@
 {
-  "name": "@sentry-internal/eslint-config-sdk",
+  "name": "@sentry-murz/eslint-config-sdk",
   "version": "6.2.5",
   "description": "Official Sentry SDK eslint config",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

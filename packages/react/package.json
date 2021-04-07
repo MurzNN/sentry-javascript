@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/react",
+  "name": "@sentry-murz/react",
   "version": "6.2.5",
   "description": "Offical Sentry SDK for React.js",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

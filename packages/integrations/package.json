@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/integrations",
+  "name": "@sentry-murz/integrations",
   "version": "6.2.5",
   "description": "Pluggable integrations that can be used to enhance JS SDKs",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

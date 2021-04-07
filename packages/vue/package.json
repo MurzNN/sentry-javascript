@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/vue",
+  "name": "@sentry-murz/vue",
   "version": "6.2.5",
   "description": "Offical Sentry SDK for Vue.js",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

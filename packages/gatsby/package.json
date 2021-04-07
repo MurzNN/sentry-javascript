@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/gatsby",
+  "name": "@sentry-murz/gatsby",
   "version": "6.2.5",
   "description": "Offical Sentry SDK for Gatsby.js",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

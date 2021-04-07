@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/ember",
+  "name": "@sentry-murz/ember",
   "version": "6.2.5",
   "description": "Offical Sentry SDK for Ember.js",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/angular",
+  "name": "@sentry-murz/angular",
   "version": "6.2.5",
   "description": "Offical Sentry SDK for Angular",
   "repository": "git://github.com/getsentry/sentry-javascript.git",

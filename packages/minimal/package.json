@@ -1,5 +1,5 @@
 {
-  "name": "@sentry/minimal",
+  "name": "@sentry-murz/minimal",
   "version": "6.2.5",
   "description": "Sentry minimal library that can be used in other packages",
   "repository": "git://github.com/getsentry/sentry-javascript.git",
